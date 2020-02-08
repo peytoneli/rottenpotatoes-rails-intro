@@ -11,16 +11,37 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @all_ratings = Movie.ratings
+    fillSort = false
+    fillRate = false
+    if params.key?(:sort) && params[:sort] != session[:sort]
+      session[:sort] = params[:sort]
+    elsif (not params.key?(:sort)) && session.key?(:sort)
+      params[:sort] = session[:sort]
+      fillSort = true
+    end
+    
+    if params.key?(:ratings) && params[:ratings] != session[:ratings]
+      session[:ratings] = params[:ratings]
+    elsif (not params.key?(:ratings)) && session.key?(:ratings)
+      params[:ratings] = session[:ratings]
+      fillRate = true
+    end
+    
+    if fillSort || fillRate
+      flash.keep
+      redirect_to movies_path(params)
+    end
+    
     @checked_ratings = Movie.ratings
-    if params.key?(:sort)
-      @movies = Movie.order("#{params[:sort]} ASC")
-    elsif params.key?(:ratings)
+    @movies = Movie.all
+    if params.key?(:ratings)
       @checked_ratings = params[:ratings].keys
       @movies = Movie.with_ratings(@checked_ratings)
-    else
-      @movies = Movie.all
     end
-    @all_ratings = Movie.ratings
+    if params.key?(:sort)
+      @movies = @movies.order("#{params[:sort]} ASC")
+    end
   end
 
   def new
